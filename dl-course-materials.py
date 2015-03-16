@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import urllib.request, getpass, sys
+import urllib.request, getpass, sys, re
 from bs4 import BeautifulSoup, SoupStrainer
 from urllib.parse import urljoin
 
@@ -35,17 +35,33 @@ def pull_site(info):
 
 
 """ Keep in mind that url may not needed to be appended to the link. Depends on
-    if it is an absolute or relative link. """
-def parse_for_pdf(url, response):
-     soup = BeautifulSoup(response, parse_only=SoupStrainer('a'), from_encoding="utf-8")
-     # to do: return links ending file types user asked for. start with pdfs.
-     # if link begins with / then it is a relative link
+    if it is an absolute or relative link. Filetype should be a RE object indicating
+    the kind of link the user wants downloaded """
+def parse_for_links(url, response, filetype):
+    links = []
+    soup = BeautifulSoup(response, parse_only=SoupStrainer('a'), from_encoding="utf-8")
+    # to do: return links ending file types user asked for. start with pdfs.
+    for link in soup.find_all('href'):
+        match=filetype.match(link.get('href'))
+        # CAN DO WITH STRING SLICING INSTEAD (maybe). Although maybe not because not all filetypes
+        # are three chars long
+        if match:
+            # if link begins with / then it is a relative link
+            if match.group()[0] == '/':
+                links.push(urljoin(url, match.group()))
+            else:
+                links.push(match.group())
+    return links
+
+
 
 def main():
     info = info_request()
 
     response = pull_site(info)
-    parse_for_pdf(response)
+
+    filetype = re.compile(".+\.pdf")
+    parse_for_links(info.url, response, filetype)
 
 
 if __name__=='__main__':
