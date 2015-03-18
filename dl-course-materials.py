@@ -40,19 +40,24 @@ def pull_site(info):
     if it is an absolute or relative link. Filetype should be a RE object indicating
     the kind of link the user wants downloaded """
 def parse_for_links(url, response, filetype):
+    names = []
     links = []
     soup = BeautifulSoup(response, parse_only=SoupStrainer('a'), from_encoding="utf-8")
+
     # to do: return links ending file types user asked for. start with pdfs.
-    for link in soup.find_all('href'):
+    for link in soup.find_all('a'):
         match=filetype.match(link.get('href'))
         # CAN DO WITH STRING SLICING INSTEAD (maybe). Although maybe not because not all filetypes
         # are three chars long
         if match:
             # if link begins with / then it is a relative link
-            if match.group()[0] == '/':
-                links.append(urljoin(url, match.group()))
+            if match.group()[0] != 'h':
+                cake = urljoin(url, match.group())
+                links.append(cake)
+                names.append(cake)
             else:
                 links.append(match.group())
+                names.append(cake)
     return links
 
 def download_file(download_url):
@@ -61,7 +66,7 @@ def download_file(download_url):
 
     response = urllib.request.urlopen(download_url)
 
-    name = m.group(1)
+
     file = open(name, 'wb')
     file.write(response.read())
     file.close()
